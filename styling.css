@@ -1,0 +1,62 @@
+<template>
+  <div :class="['page']">
+    <div :class="['leftTab']">
+      <form @submit.prevent="handleSubmit">
+        <div class="calcClear">
+          <h3>Mortgage Calculator</h3>
+          <button @click="clearForm">Clear All</button>
+        </div>
+        <div :class="['mortgageAmount']">
+          <label for="mortgageAmount">Mortgage Amount</label>
+          <div class="mortgageAmountInput">
+            <p>£</p>
+            <input type="text" id="mortgageAmount" v-model="form.mortgageAmount">
+          </div>
+        </div>
+        <div :class="['mortgageTermInterestRate']">
+          <div :class="['mortgageTerm']">
+            <label for="mortgageTerm">Mortgage Term</label>
+            <div class="mortgageTermInput">
+              <input type="text" id="mortgageTerm" v-model="form.mortgageTerm">
+              <p>years</p>
+            </div>
+          </div>
+          <div :class="['interestRate']">
+            <label for="interestRate">Interest Rate</label>
+            <div class="interestRateInput">
+              <input type="text" id="interestRate" v-model="form.interestRate">
+              <p>%</p>
+            </div>
+          </div>
+        </div>
+        <div :class="['mortgageType']">
+          <label for="mortgageType">Mortgage Type</label>
+          <div :class="['repaymentOption',{'selected': form.mortgageType === 'repayment'}]">
+            <input type="radio" id="repayment" value="repayment" v-model="form.mortgageType">
+            <label for="repayment" class="repayment">Repayment</label>
+          </div>
+          <div :class="['interestOnlyOption',{'selected': form.mortgageType === 'interestOnly'}]">
+            <input type="radio" id="interestOnly" value="interestOnly" v-model="form.mortgageType">
+            <label for="interestOnly" class="interestOnly">Interest Only</label>
+          </div>
+        </div>
+        <div :class="['buttonDiv']">
+          <button type="submit" class="calculate"> 
+            <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path fill="#133041" d="M18.75 2.25H5.25a1.5 1.5 0 0 0-1.5 1.5v16.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V3.75a1.5 1.5 0 0 0-1.5-1.5Zm-10.5 16.5a1.125 1.125 0 1 1 0-2.25 1.125 1.125 0 0 1 0 2.25Zm0-3.75a1.125 1.125 0 1 1 0-2.25 1.125 1.125 0 0 1 0 2.25ZM12 18.75a1.125 1.125 0 1 1 0-2.25 1.125 1.125 0 0 1 0 2.25ZM12 15a1.125 1.125 0 1 1 0-2.25A1.125 1.125 0 0 1 12 15Zm3.75 3.75a1.125 1.125 0 1 1 0-2.25 1.125 1.125 0 0 1 0 2.25Zm0-3.75a1.125 1.125 0 1 1 0-2.25 1.125 1.125 0 0 1 0 2.25Zm1.5-5.25a.75.75 0 0 1-.75.75h-9a.75.75 0 0 1-.75-.75V6a.75.75 0 0 1 .75-.75h9a.75.75 0 0 1 .75.75v3.75Z"/></svg></span>
+            Calculate Repayments</button>
+        </div>
+      </form>
+    </div>
+    <div :class="['rightTab']">
+      <div v-if="!success" :class="['rightTabBegin']">
+        <h3>Results are shown here</h3>
+        <p>Complete the form and click “calculate repayments” to see what 
+          your monthly repayments would be.</p>
+      </div>
+      <div v-if="success" :class="['rightTabCompleted']">
+        <h3>Monthly Payment: £{{ monthlyPayment.toFixed(2) }}</h3>
+        <h3>Total Payment: £{{ totalPayment.toFixed(2) }}</h3>
+      </div>
+    </div>
+  </div>
+</template>
