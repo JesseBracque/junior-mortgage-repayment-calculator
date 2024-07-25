@@ -1,5 +1,5 @@
 <template>
-  <div :class="['page']">
+  <div :class="['page', {'has-errors': submitted && Object.keys(errors).length > 0}]">
     <div :class="['leftTab']">
       <form @submit.prevent="handleSubmit">
         <div class="calcClear">
@@ -8,18 +8,20 @@
         </div>
         <div :class="['mortgageAmount']">
           <label for="mortgageAmount">Mortgage Amount</label>
-          <div class="mortgageAmountInput">
+          <div :class="['mortgageAmountInput',{'filled': form.mortgageAmount !== '' && !submitted}]">
             <p>£</p>
-            <input type="text" id="mortgageAmount" v-model="form.mortgageAmount">
+            <input type="text" id="mortgageAmount" v-model="form.mortgageAmount" @input="handleInput">
           </div>
+          <div v-if="errors.mortgageAmount && submitted" :class="['error-message']">{{ errors.mortgageAmount }}</div>
         </div>
         <div :class="['mortgageTermInterestRate']">
           <div :class="['mortgageTerm']">
             <label for="mortgageTerm">Mortgage Term</label>
             <div class="mortgageTermInput">
-              <input type="text" id="mortgageTerm" v-model="form.mortgageTerm">
+              <input type="text" id="mortgageTerm" v-model="form.mortgageTerm" @input="handleInput">
               <p>years</p>
             </div>
+            <div v-if="errors.mortgageTerm && submitted && !success" :class="['error-message']">{{ errors.mortgageTerm }}</div>
           </div>
           <div :class="['interestRate']">
             <label for="interestRate">Interest Rate</label>
@@ -27,6 +29,7 @@
               <input type="text" id="interestRate" v-model="form.interestRate">
               <p>%</p>
             </div>
+            <div v-if="errors.interestRate && submitted && !success" :class="['error-message']">{{ errors.interestRate }}</div>
           </div>
         </div>
         <div :class="['mortgageType']">
@@ -39,24 +42,153 @@
             <input type="radio" id="interestOnly" value="interestOnly" v-model="form.mortgageType">
             <label for="interestOnly" class="interestOnly">Interest Only</label>
           </div>
+          <div v-if="errors.mortgageType && submitted && !success" :class="['error-message']">{{ errors.mortgageType }}</div>
         </div>
         <div :class="['buttonDiv']">
-          <button type="submit" class="calculate"> 
-            <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path fill="#133041" d="M18.75 2.25H5.25a1.5 1.5 0 0 0-1.5 1.5v16.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V3.75a1.5 1.5 0 0 0-1.5-1.5Zm-10.5 16.5a1.125 1.125 0 1 1 0-2.25 1.125 1.125 0 0 1 0 2.25Zm0-3.75a1.125 1.125 0 1 1 0-2.25 1.125 1.125 0 0 1 0 2.25ZM12 18.75a1.125 1.125 0 1 1 0-2.25 1.125 1.125 0 0 1 0 2.25ZM12 15a1.125 1.125 0 1 1 0-2.25A1.125 1.125 0 0 1 12 15Zm3.75 3.75a1.125 1.125 0 1 1 0-2.25 1.125 1.125 0 0 1 0 2.25Zm0-3.75a1.125 1.125 0 1 1 0-2.25 1.125 1.125 0 0 1 0 2.25Zm1.5-5.25a.75.75 0 0 1-.75.75h-9a.75.75 0 0 1-.75-.75V6a.75.75 0 0 1 .75-.75h9a.75.75 0 0 1 .75.75v3.75Z"/></svg></span>
+          <button @click="handleSubmit" class="calculate"> 
             Calculate Repayments</button>
         </div>
       </form>
     </div>
-    <div :class="['rightTab']">
-      <div v-if="!success" :class="['rightTabBegin']">
+    <div :class="['rightTab',{'has-errors': submitted && Object.keys(errors).length > 0}]">
+      <div v-if="!this.success" :class="['rightTabBegin']">
         <h3>Results are shown here</h3>
         <p>Complete the form and click “calculate repayments” to see what 
           your monthly repayments would be.</p>
       </div>
-      <div v-if="success" :class="['rightTabCompleted']">
-        <h3>Monthly Payment: £{{ monthlyPayment.toFixed(2) }}</h3>
-        <h3>Total Payment: £{{ totalPayment.toFixed(2) }}</h3>
+      <div v-if="this.success" :class="['rightTabCompleted']">
+        <div :class="['rightTabCompletedText']">
+          <h3>Your results</h3>
+          <p>Your results are shown below based on the information you provided. To adjust the results, edit the form and click "calculate repayments" again.</p>
+        </div>
+        <div :class="['box']">
+          <div :class="['upperBox']">
+            <p>Your monthly repayments</p>
+            <p :class="['monthly']">£{{ monthlyPayment.toFixed(2) }}</p>
+          </div>
+          <div :class="['lowerBox']">
+            <p>Total you'll repay over the term</p>
+            <p :class="['total']">£{{ totalPayment.toFixed(2) }}</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
+
+<script>
+export default {
+  data() {
+    return {
+      form: {
+        mortgageAmount: '',
+        mortgageTerm: '',
+        interestRate: '',
+        mortgageType: ''
+      },
+      errors: {},
+      submitted: false,
+      success: false,
+      monthlyPayment: '',
+      totalPayment: ''
+    }
+  },
+  methods:{
+    clearForm() {
+      this.form = {
+        mortgageAmount: '',
+        mortgageTerm: '',
+        interestRate: '',
+        mortgageType: ''
+      }
+      this.errors = {}
+      this.submitted = false
+      this.success = false
+      this.monthlyPayment = ''
+      this.totalPayment = ''
+    },
+    handleSubmit() {
+      this.submitted = true
+      this.errors = this.validateForm()
+
+      if (Object.keys(this.errors).length === 0) {
+        let result = this.calculateRepayment()
+        this.monthlyPayment = result[0]
+        this.totalPayment = result[1]
+        this.success = true
+      } else {
+        this.success = false
+      }
+    },
+    validateForm() {
+      let errors = {}
+
+      if (!this.form.mortgageAmount) {
+        errors.mortgageAmount = 'This field is required!'
+      }
+      if (!this.form.mortgageTerm) {
+        errors.mortgageTerm = 'This field is required!'
+      }
+      if (!this.form.interestRate) {
+        errors.interestRate = 'This field is required!'
+      }
+      if (!this.form.mortgageType) {
+        errors.mortgageType = 'This field is required!'
+      }
+
+      return errors;
+    },
+    calculateRepayment() {
+      let list = [0, 0]
+      let mortgageAmountWithoutComma = this.form.mortgageAmount.replace(/,/g, '')
+      let mortgageTermWithoutComma = this.form.mortgageTerm.replace(/,/g, '')
+      let mortgageAmountInt = parseFloat(mortgageAmountWithoutComma)
+      let mortgageTermInt = parseInt(mortgageTermWithoutComma)
+      let interestRateInt = parseFloat(this.form.interestRate)
+
+      if (this.form.mortgageType == 'repayment'){
+        let monthlyInterestRate = (interestRateInt / 100) / 12
+        let numberOfPayments = mortgageTermInt * 12
+        list[0] = (mortgageAmountInt * monthlyInterestRate) / (1 - (1 + monthlyInterestRate) ** (-numberOfPayments))
+        list[1] = list[0] * numberOfPayments
+      }
+
+      return list
+    },
+    handleInput(event) {
+      const target = event.target;
+      let value = target.value.replace(/,/g, '') // Remove existing commas
+
+      if (!isNaN(value) && value !== '') {
+        let newVal = value
+          .split('')
+          .reverse()
+          .join('')
+          .replace(/(\d{3})(?=\d)/g, '$1,')
+          .split('')
+          .reverse()
+          .join('');
+        this.form[target.id] = newVal; // Update form data with numeric value (without commas)
+
+        target.value = newVal; // Display the value with commas
+      } else {
+        this.form[target.id] = '';
+        target.value = '';
+      }
+    },
+    formatNumber(number) {
+      return number.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    },
+
+    // Add this new method to format input fields
+    formatInputFields() {
+      ['mortgageAmount', 'mortgageTerm'].forEach(field => {
+        const value = this.form[field].toString()
+        const formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        this.form[field] = formattedValue
+        document.getElementById(field).value = formattedValue
+      })
+    }
+  }
+}
+</script>
